@@ -1,0 +1,18 @@
+<html>
+	<head>
+		<title>results</title>
+	</head>
+	<body>
+		<h1>{{.Title}}</h1>
+		<p>[<a href="/add/">add new data</a>]</p>
+		<ol>
+			{{range .ReadData}}
+			<li>
+				<p>Time: {{.Time}}</p>
+				<p>Value: {{.Value}}</p>
+			</li>
+			{{end}}
+		</ol>
+	</body>
+</html>
+
