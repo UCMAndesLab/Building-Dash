@@ -5,7 +5,7 @@
 			<script type="text/javascript">
 
 			window.onload = function () {
-				var chart = new CanvasJS.Chart("chartContainer", {
+				/*var chart = new CanvasJS.Chart("chartContainer", {
 					title:{
 						text: "My First Chart in CanvasJS"              
 					},
@@ -22,7 +22,52 @@
 						]
 					}
 					]
-				});
+				});*/
+				var readData = {{.ReadData}};
+				var title = {{.Title}}; 
+				var series1 = {
+					type: "column",
+					name: "Values",
+					showInLegend: true
+				};
+				var chart = new CanvasJS.Chart("chartContainer")
+
+				chart.options.title = {text: title}; 
+				chart.options.axisX = {suffix: "hours", valueFormatString: "#"}; 
+				chart.options.axisY = {valueFormatString: "##.##0"};
+				chart.options.data = []; 
+
+				chart.options.data.push(series1); 
+
+				//var d = new Date(readData[0].Time); 
+				//alert(d.getHours())
+				//for 
+				//series1.dataPoints = [
+					//{label: readData[0].Time, y: readData[0].Value}
+				//];
+				/*for(i = 0; i < readData.length; ++i){
+					var dp = [{label: new Date(readData[0].Time), y: readData[i].Value}]; 
+					series1.dataPoints = series1.dataPoints.push(dp); 
+				}*/
+
+				/*series1.dataPoints = [
+					{label: new Date(readData[0].Time), y: readData[0].Value}
+				];*/
+
+				series1.dataPoints = []; 
+
+				/*for(i = 1; i < readData.length; i++){
+					dp = [{label: new Date(readData[i].Time), y: readData[i].Value}];
+				}*/
+
+				//dp = {label: new Date(readData[1].Time), y: readData[1].Value}
+				var dp = []; 
+				for(i = 0; i < readData.length; ++i)
+				{
+					dp.push({label: new Date(readData[i].Time), y: readData[i].Value}); 
+				}
+				series1.dataPoints = series1.dataPoints.concat(dp);
+
 				chart.render();
 			}
 			</script>
