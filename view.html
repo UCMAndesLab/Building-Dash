@@ -26,14 +26,22 @@
 				var readData = {{.ReadData}};
 				var title = {{.Title}}; 
 				var series1 = {
-					type: "column",
+					type: "spline",
 					name: "Values",
-					showInLegend: true
+					showInLegend: true,
+					markerType: "none"
 				};
 				var chart = new CanvasJS.Chart("chartContainer")
 
 				chart.options.title = {text: title}; 
-				chart.options.axisX = {suffix: "hours", valueFormatString: "#"}; 
+				chart.options.axisX = {
+					valueFormatString: "hh-TT-K",
+					title: "time",
+					intervalType: "minute",
+					interval: 1
+				
+					
+				}; 
 				chart.options.axisY = {valueFormatString: "##.##0"};
 				chart.options.data = []; 
 
@@ -64,7 +72,9 @@
 				var dp = []; 
 				for(i = 0; i < readData.length; ++i)
 				{
-					dp.push({label: new Date(readData[i].Time), y: readData[i].Value}); 
+					//d = new Date(readData[i].Time.getHours());
+					//alert(d); 
+					dp.push({x: new Date(readData[i].Time), y: readData[i].Value}); 
 				}
 				series1.dataPoints = series1.dataPoints.concat(dp);
 

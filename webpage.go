@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"regexp"
 	//"strconv"
+	//"time"
 )
 
 var responseTemplate = template.Must(template.ParseFiles("view.html", "add.html"))
@@ -20,6 +21,10 @@ type Page struct {
 	Title    string
 	ReadData []gosMAP.ReadPair
 }
+
+/*type Sample struct{
+	Time time.Time
+}*/
 
 func createPage(title string) (*Page, error) {
 	key := "rU3eqtaE4zBSzZKjoUS9Q7fVPbTmKmD2eOUr"
