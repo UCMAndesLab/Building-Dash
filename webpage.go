@@ -43,33 +43,12 @@ func createPage(title string) (*Page, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		/*if len(d) != 0 {
-			fmt.Println(uuid[i] + " returns no data slice")
-			//fmt.Printf("index: %d", i)
-		} else {
-			if len(d[0].Readings) == 0 {
-				fmt.Println(uuid[i])
-			}
-		}*/
 		if len(d) != 0 {
 			if len(d[0].Readings) != 0 {
 				data = append(data, d[0])
 			}
 		}
 	}
-
-	/*for _, r := range data[1].Readings {
-		fmt.Printf("time: %s value: %.2f\n", r.Time, r.Value)
-	}*/
-
-	/*for i := range data {
-		for _, r := range data[i].Readings {
-			fmt.Printf("time: %s value: %.2f\n", r.Time, r.Value)
-		}
-	}*/
-	//.Println(data[0].Uuid)
-
 	return &Page{Title: title, ReadData: data}, nil
 }
 
