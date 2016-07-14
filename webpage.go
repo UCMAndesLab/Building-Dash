@@ -17,11 +17,13 @@ var responseTemplate = template.Must(template.ParseFiles("view.html", "query.htm
 var apikey string = "rU3eqtaE4zBSzZKjoUS9Q7fVPbTmKmD2eOUr"
 
 var validPath = regexp.MustCompile("^/(query|save|view)/([a-zA-Z0-9]+)$")
-var uuid string
+var uuid []string
+
+var data []gosMAP.Data
 
 type Page struct {
 	Title    string
-	ReadData []gosMAP.ReadPair
+	ReadData []gosMAP.Data
 }
 
 /*type Sample struct{
@@ -35,19 +37,45 @@ func createPage(title string) (*Page, error) {
 	if e != nil {
 		return nil, e
 	}
+	for i := range uuid {
+		d, err := conn.Get(uuid[i], 0, 0, 10)
+		//fmt.Println(uuid)
+		if err != nil {
+			return nil, err
+		}
 
-	d, err := conn.Get(uuid, 0, 0, 10)
-	fmt.Println(uuid)
-	if err != nil {
-		return nil, err
+		/*if len(d) != 0 {
+			fmt.Println(uuid[i] + " returns no data slice")
+			//fmt.Printf("index: %d", i)
+		} else {
+			if len(d[0].Readings) == 0 {
+				fmt.Println(uuid[i])
+			}
+		}*/
+		if len(d) != 0 {
+			if len(d[0].Readings) != 0 {
+				data = append(data, d[0])
+			}
+		}
 	}
 
-	return &Page{Title: title, ReadData: d[0].Readings}, nil
+	/*for _, r := range data[1].Readings {
+		fmt.Printf("time: %s value: %.2f\n", r.Time, r.Value)
+	}*/
+
+	/*for i := range data {
+		for _, r := range data[i].Readings {
+			fmt.Printf("time: %s value: %.2f\n", r.Time, r.Value)
+		}
+	}*/
+	//.Println(data[0].Uuid)
+
+	return &Page{Title: title, ReadData: data}, nil
 }
 
 func viewHandler(c *gin.Context) {
 
-	title := c.Request.URL.Path
+	title := c.Request.URL.Path[len("/view/"):]
 	//query := c.Request.FormValue("query")
 
 	fmt.Println(title)
@@ -89,9 +117,13 @@ func saveHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusBadRequest, err)
 	}
 
-	uuid = d[0]
+	//uuid = d[0]
+
 	for i := range d {
-		fmt.Println(d[i])
+
+		uuid = append(uuid, d[i])
+		//fmt.Println(uuid[i])
+
 	}
 
 	c.Redirect(http.StatusFound, "/view/"+query)
