@@ -3,9 +3,10 @@ package main
 import (
 	"errors"
 	"fmt"
+	"html/template"
+
 	"github.com/UCMAndesLab/gosMAP"
 	"github.com/gin-gonic/gin"
-	"html/template"
 	//"io/ioutil"
 	"net/http"
 	"regexp"
@@ -130,6 +131,10 @@ func getTitle(c *gin.Context) (string, error) {
 func main() {
 
 	router := gin.Default()
+	router.LoadHTMLFiles("index.html")
+	router.GET("/", func(c *gin.Context) {
+		c.HTML(200, "index.html", nil)
+	})
 	router.GET("/view/:query", viewHandler)
 	router.GET("/query/", queryHandler) //ok, for a new page with no title yet, don't include :adding in the url
 	router.POST("/save/", saveHandler)
