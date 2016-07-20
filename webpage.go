@@ -53,7 +53,7 @@ func createPage(title string, c *gin.Context) (*Page, error) {
 
 	err = json.Unmarshal(item.Value, &query)
 
-	d, err := conn.Get(query[0], 0, 0, 10)
+	//d, err := conn.Get(query[0], 0, 0, 10)
 
 	if err != nil {
 		return nil, err
@@ -70,7 +70,22 @@ func createPage(title string, c *gin.Context) (*Page, error) {
 			}
 		}
 	}*/
-	return &Page{Title: title, ReadData: d}, nil
+
+	var data []gosMAP.Data
+	for i := range query {
+		d, err := conn.Get(query[i], 0, 0, 10)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if len(d) != 0 {
+			if len(d[0].Readings) != 0 {
+				data = append(data, d[0])
+			}
+		}
+	}
+	return &Page{Title: title, ReadData: data}, nil
 }
 
 func viewHandler(c *gin.Context) {
