@@ -1,26 +1,24 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
-	"html/template"
-
 	"github.com/UCMAndesLab/gosMAP"
 	"github.com/gin-gonic/gin"
-	//"io/ioutil"
+	"html/template"
 	"net/http"
 	"regexp"
+	"strings"
 	//"strconv"
 	//"time"
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 var responseTemplate = template.Must(template.ParseFiles("view.html", "query.html"))
 var apikey string = "rU3eqtaE4zBSzZKjoUS9Q7fVPbTmKmD2eOUr"
 
 var validPath = regexp.MustCompile("^/(query|save|view)/([a-zA-Z0-9]+)$")
-var uuid []string
-
-var data []gosMAP.Data
 
 type Page struct {
 	Title    string
@@ -31,14 +29,36 @@ type Page struct {
 	Time time.Time
 }*/
 
-func createPage(title string) (*Page, error) {
+func createPage(title string, c *gin.Context) (*Page, error) {
 
 	//uuid := "51427e0d-ee71-5df2-90b5-ebc3cc720f87"
-	conn, e := gosMAP.Connect("http://mercury:8079", apikey)
-	if e != nil {
-		return nil, e
+	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
+	conn.ConnectMemcache("localhost:11211")
+
+	if err != nil {
+		return nil, err
 	}
-	for i := range uuid {
+
+	building := c.Request.URL.Path[len("/view/"):]
+
+	key := strings.Replace(building, " ", "\\", -1)
+
+	item, err := conn.Mc.Get(key)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var query []string
+
+	err = json.Unmarshal(item.Value, &query)
+
+	d, err := conn.Get(query[0], 0, 0, 10)
+
+	if err != nil {
+		return nil, err
+	}
+	/*for i := range uuid {
 		d, err := conn.Get(uuid[i], 0, 0, 10)
 		//fmt.Println(uuid)
 		if err != nil {
@@ -49,8 +69,8 @@ func createPage(title string) (*Page, error) {
 				data = append(data, d[0])
 			}
 		}
-	}
-	return &Page{Title: title, ReadData: data}, nil
+	}*/
+	return &Page{Title: title, ReadData: d}, nil
 }
 
 func viewHandler(c *gin.Context) {
@@ -58,13 +78,7 @@ func viewHandler(c *gin.Context) {
 	title := c.Request.URL.Path[len("/view/"):]
 	//query := c.Request.FormValue("query")
 
-	fmt.Println(title)
-
-	/*if err != nil {
-		return
-	}*/
-
-	p, err := createPage(title)
+	p, err := createPage(title, c)
 
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
@@ -81,32 +95,47 @@ func queryHandler(c *gin.Context) {
 }
 func saveHandler(c *gin.Context) {
 
+	building := c.Request.FormValue("query")
+
+	key := strings.Replace(building, " ", "\\", -1)
+
 	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
 
+	conn.ConnectMemcache("localhost:11211")
+
 	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, errors.New("Cannot connect to the server"))
+		c.AbortWithError(http.StatusInternalServerError, errors.New("Cannot connect to mercury"))
 	}
 
-	query := c.Request.FormValue("query")
+	_, err = conn.Mc.Get(key)
 
-	//fmt.Println(query)
-
-	//d, err := conn.QueryList("select distinct uuid where Metadata/Location/Building = 'Facilities A'")
-	d, err := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", query))
 	if err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
+		/*c.AbortWithError(http.StatusInternalServerError, errors.New("Cache miss"))
+		return*/
+
+		q, _ := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", building))
+
+		b, err := json.Marshal(q)
+
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, errors.New("Cannot marshal"))
+			return
+		}
+
+		item := memcache.Item{Key: key, Value: b, Expiration: 0}
+
+		err = conn.Mc.Add(&item)
+
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/view/"+building)
+
+	} else {
+		c.Redirect(http.StatusFound, "/view/"+building)
 	}
-
-	//uuid = d[0]
-
-	for i := range d {
-
-		uuid = append(uuid, d[i])
-		//fmt.Println(uuid[i])
-
-	}
-
-	c.Redirect(http.StatusFound, "/view/"+query)
 }
 
 func renderTemplate(c *gin.Context, tmpl string, p *Page) {
