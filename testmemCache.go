@@ -8,6 +8,10 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 	"github.com/gin-gonic/gin"
 	"html/template"
+	//"log"
+	"net/http"
+	//"time"
+	"strings"
 )
 
 var apikey string = "rU3eqtaE4zBSzZKjoUS9Q7fVPbTmKmD2eOUr"
@@ -18,46 +22,87 @@ type Page struct {
 }
 
 func viewHandler(c *gin.Context) {
-	fmt.Fprintf(c.Writer, "<h1>Something</h1>")
+
+	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
+	conn.ConnectMemcache("localhost:11211")
+
+	if err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+	}
+
+	buidling := c.Request.URL.Path[len("/view/"):]
+
+	key := strings.Replace(buidling, " ", "\\", -1)
+
+	item, err := conn.Mc.Get(key)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	var query []string
+
+	err = json.Unmarshal(item.Value, &query)
+
+	fmt.Println(query[0])
+
+	d, err := conn.Get(query[0], 0, 0, 10)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	fmt.Fprintf(c.Writer, "<h1>%s</h1>", d)
 }
 
 func queryHandler(c *gin.Context) {
-	t := template.ParseFiles("query.html")
+
+	t, _ := template.ParseFiles("query.html")
 	t.Execute(c.Writer, nil)
 }
 
 func saveHandler(c *gin.Context) {
 	building := c.Request.FormValue("query")
 
-	d, err := Get(building)
-}
+	key := strings.Replace(building, " ", "\\", -1)
 
-func Get(building string) (memcache.Item, error) {
 	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
+
+	conn.ConnectMemcache("localhost:11211")
+
 	if err != nil {
-		return nil, errors.New("Cannot connect to mercury")
+		c.AbortWithError(http.StatusInternalServerError, errors.New("Cannot connect to mercury"))
 	}
 
-	d, err := conn.Mc.Get(building)
+	_, err = conn.Mc.Get(key)
 
-	if err == nil {
-		fmt.Println("The cached value exists; cache hit")
-		return d, nil
-	} else {
-		fmt.Println("cache miss, doesn't exist")
-		q := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", query))
-		//d := conn.Get(q[0], 0, 0, 10)
+	if err != nil {
+		/*c.AbortWithError(http.StatusInternalServerError, errors.New("Cache miss"))
+		return*/
 
-		b := json.Marshal(q)
-		err = conn.Mc.Set(&memcache.Item{
-			Key:   building,
-			Value: q,
-		})
+		q, _ := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", building))
+
+		b, err := json.Marshal(q)
 
 		if err != nil {
-			return nil, errors.New("Something went wrong with setting the memcache")
+			c.AbortWithError(http.StatusInternalServerError, errors.New("Cannot marshal"))
+			return
 		}
-		return Get(building)
+
+		item := memcache.Item{Key: key, Value: b, Expiration: 0}
+
+		err = conn.Mc.Add(&item)
+
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		c.Redirect(http.StatusFound, "/view/"+building)
+
+	} else {
+		c.Redirect(http.StatusFound, "/view/"+building)
 	}
 }
 
@@ -66,7 +111,7 @@ func main() {
 	router.GET("/", func(c *gin.Context) {
 		c.HTML(200, "index.html", nil)
 	})
-	router.GET("/view/", viewHandler)
+	router.GET("/view/:key", viewHandler)
 	router.GET("/query/", queryHandler)
 	router.POST("/save/", saveHandler)
 	router.Run(":8080")
