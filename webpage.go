@@ -25,13 +25,8 @@ type Page struct {
 	ReadData []gosMAP.Data
 }
 
-/*type Sample struct{
-	Time time.Time
-}*/
-
 func createPage(title string, c *gin.Context) (*Page, error) {
 
-	//uuid := "51427e0d-ee71-5df2-90b5-ebc3cc720f87"
 	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
 	conn.ConnectMemcache("localhost:11211")
 
@@ -53,23 +48,9 @@ func createPage(title string, c *gin.Context) (*Page, error) {
 
 	err = json.Unmarshal(item.Value, &query)
 
-	//d, err := conn.Get(query[0], 0, 0, 10)
-
 	if err != nil {
 		return nil, err
 	}
-	/*for i := range uuid {
-		d, err := conn.Get(uuid[i], 0, 0, 10)
-		//fmt.Println(uuid)
-		if err != nil {
-			return nil, err
-		}
-		if len(d) != 0 {
-			if len(d[0].Readings) != 0 {
-				data = append(data, d[0])
-			}
-		}
-	}*/
 
 	var data []gosMAP.Data
 	for i := range query {
@@ -91,7 +72,6 @@ func createPage(title string, c *gin.Context) (*Page, error) {
 func viewHandler(c *gin.Context) {
 
 	title := c.Request.URL.Path[len("/view/"):]
-	//query := c.Request.FormValue("query")
 
 	p, err := createPage(title, c)
 
@@ -100,12 +80,10 @@ func viewHandler(c *gin.Context) {
 		return
 	}
 
-	//responseTemplate.Execute(c.Writer, p)
 	renderTemplate(c, "view", p)
-	//fmt.Fprintf(c.Writer, "<h1>Something</h1>")
 }
 func queryHandler(c *gin.Context) {
-	//title := c.Request.FormValue("title")
+
 	renderTemplate(c, "query", nil)
 }
 func saveHandler(c *gin.Context) {
@@ -125,8 +103,6 @@ func saveHandler(c *gin.Context) {
 	_, err = conn.Mc.Get(key)
 
 	if err != nil {
-		/*c.AbortWithError(http.StatusInternalServerError, errors.New("Cache miss"))
-		return*/
 
 		q, _ := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", building))
 
@@ -137,7 +113,7 @@ func saveHandler(c *gin.Context) {
 			return
 		}
 
-		item := memcache.Item{Key: key, Value: b, Expiration: 0}
+		item := memcache.Item{Key: key, Value: b, Expiration: }
 
 		err = conn.Mc.Add(&item)
 
@@ -183,8 +159,5 @@ func main() {
 	router.GET("/query/", queryHandler) //ok, for a new page with no title yet, don't include :adding in the url
 	router.POST("/save/", saveHandler)
 	router.Run(":8080")
-	//createPage("TestData")
-
-	//exampleQuery()
 
 }

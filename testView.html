@@ -2,10 +2,144 @@
 <html>
 <head>
 	<title>testView</title>
+		<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
+		<script type="text/javascript">
+			function mouseover(){
+				var readData = {{.ReadData}}; 
+
+
+				var path = {{.Path}};
+
+				var title = path; 
+
+				var uuid = readData.uuid; 
+
+				var series1 = {
+					type: "spline",
+					name: "Values",
+					showInLegend: true,
+					markerType: "none"
+				}; 
+
+				var chart = new CanvasJS.Chart(path); 
+
+				chart.options.animationEnabled = true; 
+				chart.options.title = {text: title}; 
+
+				chart.options.axisX = {
+					valueFormatString: "hh-TT-K",
+					title: "time",
+					intervalType: "minute",
+					interval: 1
+				}; 
+
+				chart.options.axisY = {valueFormatString: "##.##0"}; 
+				chart.options.data = []; 
+				chart.options.data.push(series1); 
+
+				testData = readData.Readings; 
+
+				var dp = []; 
+
+				series1.dataPoints = []; 
+
+				for(i = 0; i < testData.length; ++i){
+					dp.push({x: new Date(testData[i].Time), y: testData[i].Value});
+				}
+
+				series1.dataPoints = series1.dataPoints.concat(dp); 
+
+				chart.render(); 
+
+			}
+			window.onload = mouseover; 
+
+						/* When the user clicks on the button,
+			toggle between hiding and showing the dropdown content */
+			function myFunction() {
+			    document.getElementById("myDropdown").classList.toggle("show");
+			}
+
+			// Close the dropdown menu if the user clicks outside of it
+			window.onclick = function(event) {
+			  if (!event.target.matches('.dropbtn')) {
+
+			    var dropdowns = document.getElementsByClassName("dropdown-content");
+			    var i;
+			    for (i = 0; i < dropdowns.length; i++) {
+			      var openDropdown = dropdowns[i];
+			      if (openDropdown.classList.contains('show')) {
+			        openDropdown.classList.remove('show');
+			      }
+			    }
+			  }
+			}
+		</script>
+		<style type="text/css">
+			/* Dropdown Button */
+			.dropbtn {
+			    background-color: #4CAF50;
+			    color: white;
+			    padding: 16px;
+			    font-size: 16px;
+			    border: none;
+			    cursor: pointer;
+			}
+
+			/* Dropdown button on hover & focus */
+			.dropbtn:hover, .dropbtn:focus {
+			    background-color: #3e8e41;
+			}
+
+			/* The container <div> - needed to position the dropdown content */
+			.dropdown {
+			   
+			    display: block;
+			}
+
+			/* Dropdown Content (Hidden by Default) */
+			.dropdown-content {
+			    display: none;
+			    position: relative;
+			    background-color: #f9f9f9;
+			    
+			    
+			}
+
+			/* Links inside the dropdown */
+			.dropdown-content div {
+			
+			}
+
+			/* Change color of dropdown links on hover */
+			.dropdown-content a:hover {background-color: #f1f1f1}
+
+			/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+			.show {display:block; }
+						
+		</style>
 </head>
 <body>
+	<!--<h1>{{.Path}}</h1>
+	<div>
+		<div id={{.Path}} onmouseover="mouseover()" style="height: 300px; width: 100%" >{{.Path}}</div>
+	</div>-->
+	<!--<h1 onmouseover="mouseover()">{{.Path}}</h1>
+	<div id={{.Path}} style="height:300px; width: 100%"></div>
 
-	<h1>Hello world</h1>
+	<div class="dropdown">
+		<h1 onmouseover="mouseover()" class="dropicon">{{.Path}}</h1>
+		<div id="myDropdown" class="dropdown-content">
 
-</body>
+		</div>
+	</div>-->
+	 <div class="dropdown">
+	  <button onclick="myFunction()" class="dropbtn">Dropdown</button>
+
+	  <div id="myDropdown" class="dropdown-content">
+	    <div id={{.Path}} style="height:300px; width:100%"></div>
+	    
+	  </div>
+	</div>
+
 </html>
