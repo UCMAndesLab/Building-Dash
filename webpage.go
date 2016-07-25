@@ -113,7 +113,7 @@ func saveHandler(c *gin.Context) {
 			return
 		}
 
-		item := memcache.Item{Key: key, Value: b, Expiration: }
+		item := memcache.Item{Key: key, Value: b, Expiration: 6}
 
 		err = conn.Mc.Add(&item)
 
@@ -158,6 +158,6 @@ func main() {
 	router.GET("/view/:query", viewHandler)
 	router.GET("/query/", queryHandler) //ok, for a new page with no title yet, don't include :adding in the url
 	router.POST("/save/", saveHandler)
-	router.Run(":8080")
+	router.Run(":3000")
 
 }

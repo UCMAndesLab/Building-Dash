@@ -3,8 +3,10 @@
 <head>
 	<title>testView</title>
 		<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
 		<script type="text/javascript">
-			function mouseover(){
+			function displayChart(){
 				var readData = {{.ReadData}}; 
 
 
@@ -51,8 +53,45 @@
 
 				chart.render(); 
 
+				var series2 = {
+					type: "spline",
+					name: "Values",
+					showInLegend: true,
+					markerType: "none"
+				}; 
+
+				var chart2 = new CanvasJS.Chart("chart2"); 
+
+				chart2.options.animationEnabled = true; 
+
+				chart2.options.title = {text: title}; 
+				chart2.options.axisX = {
+					valueFormatString: "hh-TT-K",
+					title: "time",
+					intervalType: "minute",
+					interval: 1
+				}; 
+
+				chart2.options.data =[]; 
+
+				chart2.options.data.push(series2); 
+
+				var dp2 =[]; 
+
+				series2.dataPoints = []; 
+
+				for(j = 0; j < testData.length; ++j){
+					dp2.push({x: new Date(testData[j].Time), y: testData[j].Value + 100.0}); 
+				}
+
+				series2.dataPoints = series2.dataPoints.concat(dp2); 
+
+				chart2.render();
+
+
+
 			}
-			window.onclick = mouseover; 
+			window.onclick = displayChart; 
 			function toggleNavPanel(x){
 				var panel = document.getElementById(x), navarrow = document.getElementById("navarrow"), maxH = "300px"; 
 
@@ -65,47 +104,99 @@
 
 				}
 			}
+			function postYourAdd(x){
+				var iframe = document.getElementById(x), maxH = "300px";
+				var uuid = {{.UUid}};
+				var path = uuid; 
+				 
+				path = "/display/" + uuid; 
+				
+				iframe.src = path;
+
+				iframe.style.display="inline-block";  
+				if(iframe.style.height == maxH){
+					iframe.style.visibility="hidden";
+					iframe.style.width="0px"
+					iframe.style.height="0px"; 
+				}else{
+					iframe.style.visibility="visible"; 
+					iframe.style.height = "300px"; 
+					iframe.style.width = "100%"; 
+				}
+				
+				
+			}
+		function hideDisplay(x){
+			var iframe = document.getElementById(x);
+
+			iframe.style.visibility="hidden";  
+			iframe.style.height = "0px";
+			iframe.style.width = "0px"; 
+
+		}
 
 		
 		</script>
 		<style type="text/css">
-			div#topbar >#logo{
+			div#topbar{
+				background:-webkit-linear-gradient(#666, #000);
+				background:linear-gradient(#666, #000);
+				height:80px;
+			}
+			div#topbar > #logo{
 				float:left;
-				width: 140px;
-				height: 35px;
-				margin: 8px 0px 0px 30px;
+				width:140px;
+				height:35px;
+				margin:0px 0px 0px 0px;
 				font-size: 36px;
-				color: #999; 
+				color:#999;
 			}
 			div#topbar > #sections_btn_holder{
-				float:left;
-				width: 100%; 
-				height: 46px;
-				padding-top:50px; 
+				float:right;
+				width:144px;
+				height:46px;
+				padding-top:16px;
 			}
-			div#topbar > #sections_btn_holder > button{
-
-				background: #12a3a7; 
-			}
+			div#topbar > #sections_btn_holder > button{ background:#F90;}
 			div#topbar > #sections_panel{
-				position: relative;
-				height: 300px; 
-				width: 80%;
-			
-				top:5px; 
-				left:160px; 
-				border-radius: 0px 0px 8px 8px; 
-				overflow: hidden;
-				z-index: 10000; 
-				
+				position:absolute;
+				height:0px;
+				width:550px;
+				background:#000;
+				top:60px;
+				left:160px;
+				border-radius:0px 0px 8px 8px;
+				overflow:hidden;
+				z-index:10000;
+				transition: height 0.3s linear 0s;
 			}
 			div#topbar > #sections_panel > div{
-				background: : #333;
-				padding: 20px; 
-				height: 226px; 
+				background:#333;
+				padding:20px;
+				height:238px;
 				margin:10px;
-				color: #FC0;
+				color:#FC0;
 			}
+			table{
+
+				margin: 10px;
+
+			}
+			table, td{
+
+				border-spacing: 5px; 
+				background:  #12a3a7; 
+				
+				border-color: #12a3a7; border-collapse: collapse;
+				border: 1px solid black;
+				 
+				float: left; 
+			}
+			td{
+				padding: 5px; 
+			}
+		
+			
 			
 		</style>
 </head>
@@ -115,18 +206,37 @@
 	<div id="topbar">
 		<div id="logo">Building Dash</div>
 		<div id="sections_btn_holder">
-			<button onclick="toggleNavPanel('sections_panel')">{{.Path}}<span id="navarrow">
-				&#9662;
-			</span>
-			</button>
+	 		<button onclick="toggleNavPanel('sections_panel')">Navigator <span id="navarrow">&#9662;</span></button>
 		</div>
-		<div id="sections_panel" onclick="false">
-		<div id="chart">
-			
+		<div id="sections_panel">
+			<div>
+	      		<form action="/query/" method="GET">
+	      			<input type="submit" value="Search">
+	      			
+	      		</form>
+	    	</div>
 		</div>
-
 	</div>
 
+	
+	
+	
+	<table>
+		<tr>
+			<td><p>{{.Path}}</p></td>
+			<td><p>{{.UUid}}</p></td>
+			
+			<td>
+
+				<form action="/display/{{.UUid}}" method="GET" target="{{.UUid}}">
+				<input style="height: 51px;" type="submit" value="Display" onclick="postYourAdd('{{.UUid}}')">
+
+				</form>
+			</td>
+		</tr>
+	</table>
+	
+	<iframe name="{{.UUid}}" id="{{.UUid}}" height="0px" width="0px" style="visibility:hidden;" onmouseout="hideDisplay('{{.UUid}}')"></iframe>
 
 
 </html>

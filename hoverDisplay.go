@@ -20,7 +20,7 @@ type Page struct {
 
 	UUid string `json: "UUid"`
 
-	Info map[string]interface{}
+	Info map[string]interface{} `json: "Info"`
 
 	ReadData gosMAP.Data
 }
@@ -171,6 +171,37 @@ func hoverHandler(c *gin.Context) {
 
 }
 
+func displayHandler(c *gin.Context) {
+	uuid := c.Request.URL.Path[len("/display/"):]
+	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	data, err := conn.Get(uuid, 0, 0, 10)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	tag, err := conn.Tag(uuid)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	p := &Page{
+		Path:     tag.Path,
+		UUid:     uuid,
+		Info:     tag.Metadata,
+		ReadData: data[0],
+	}
+
+	t, _ := template.ParseFiles("display.html")
+	t.Execute(c.Writer, p)
+}
+
 func main() {
 
 	router := gin.Default()
@@ -185,6 +216,6 @@ func main() {
 
 	router.GET("/query/", queryHandler)
 	router.POST("/save/", saveHandler)
-	router.GET("/display/:path", hoverHandler)
-	router.Run(":8080")
+	router.GET("/display/:path", displayHandler)
+	router.Run(":8000")
 }

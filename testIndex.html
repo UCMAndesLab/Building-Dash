@@ -2,10 +2,96 @@
 <html>
 <head>
 	<title>testIndex</title>
+
+		<script type="text/javascript">
+			function toggleNavPanel(x){
+				var panel = document.getElementById(x), navarrow = document.getElementById("navarrow"), maxH = "300px"; 
+
+				if(panel.style.height == maxH){
+					panel.style.height = "0px"; 
+					navarrow.innerHTML = "&#9662;"; 
+				}else{
+					panel.style.height = maxH; 
+					navarrow.innerHTML = " &#9652;"; 
+
+				}
+			}
+		</script>
+		<style type="text/css">
+				div#topbar{
+					background:-webkit-linear-gradient(#666, #000);
+					background:linear-gradient(#666, #000);
+					height:80px;
+				}
+				div#topbar > #logo{
+					float:left;
+					width:140px;
+					height:35px;
+					margin:0px 0px 0px 0px;
+					font-size: 36px;
+					color:#999;
+				}
+				div#topbar > #sections_btn_holder{
+					float:right;
+					width:144px;
+					height:46px;
+					padding-top:16px;
+				}
+				div#topbar > #sections_btn_holder > button{ background:#F90;}
+				div#topbar > #sections_panel{
+					position:absolute;
+					height:0px;
+					width:550px;
+					background:#000;
+					top:60px;
+					left:160px;
+					border-radius:0px 0px 8px 8px;
+					overflow:hidden;
+					z-index:10000;
+					transition: height 0.3s linear 0s;
+				}
+				div#topbar > #sections_panel > div{
+					background:#333;
+					padding:20px;
+					height:238px;
+					margin:10px;
+					color:#FC0;
+				}
+				table{
+
+					margin: 10px;
+
+				}
+				table, td{
+
+					border-spacing: 5px; 
+					background:  #12a3a7; 
+					
+					border-color: #12a3a7; border-collapse: collapse;
+					border: 1px solid black;
+					 
+					float: left; 
+				}
+				td{
+					padding: 5px; 
+				}	
+		</style>
 </head>
 <body>
-	<h1><a href ="/query/">Search</a></h1>
-
+		<div id="topbar">
+		<div id="logo">Building Dash</div>
+		<div id="sections_btn_holder">
+	 		<button onclick="toggleNavPanel('sections_panel')">Navigator <span id="navarrow">&#9662;</span></button>
+		</div>
+		<div id="sections_panel">
+			<div>
+	      		<form action="/query/" method="GET">
+	      			<input type="submit" value="Search">
+	      			
+	      		</form>
+	    	</div>
+		</div>
+	</div>
 
 </body>
 </html>

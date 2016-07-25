@@ -2,10 +2,63 @@
 <html>
 <head>
 	<title>Testing Display</title>
+	<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
+	<script type="text/javascript">
+		window.onload = function () {
+				var readData = {{.ReadData}}; 
+
+
+				var path = {{.Path}};
+
+				var title = path; 
+
+				var uuid = readData.uuid; 
+
+				var series1 = {
+					type: "spline",
+					name: "Values",
+					showInLegend: true,
+					markerType: "none"
+				}; 
+
+				var chart = new CanvasJS.Chart("chart"); 
+
+				chart.options.animationEnabled = true; 
+				chart.options.title = {text: title}; 
+
+				chart.options.axisX = {
+					valueFormatString: "hh-TT-K",
+					title: "time",
+					intervalType: "minute",
+					interval: 1
+				}; 
+
+				chart.options.axisY = {valueFormatString: "##.##0"}; 
+				chart.options.data = []; 
+				chart.options.data.push(series1); 
+
+				testData = readData.Readings; 
+
+				var dp = []; 
+
+				series1.dataPoints = []; 
+
+				for(i = 0; i < testData.length; ++i){
+					dp.push({x: new Date(testData[i].Time), y: testData[i].Value});
+				}
+
+				series1.dataPoints = series1.dataPoints.concat(dp); 
+
+				chart.render(); 
+	}
+
+	</script>
 </head>
 <body>
 
-	<h1>{{.Path}}</h1>
+	<h1>Welcome to the display.html page</h1>
+	<h1>Here is the path: {{.Path}}</h1>
+	<div id="chart" style="height: 300px; width: 100%; "></div>
 
 </body>
 </html>
