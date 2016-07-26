@@ -36,7 +36,7 @@
 				}else{
 					iframe.style.visibility="visible"; 
 					iframe.style.height = "700px"; 
-					iframe.style.width = "700px"; 
+					iframe.style.width = "680px"; 
 				}
 				
 				
@@ -50,18 +50,12 @@
 
 			}
 
-			function scrollFrame(id){
-				var iframe = document.getElementById(id); 
-
-				iframe.style.position ="absolute"; 
-				iframe.style.top="100px"; 
-				iframe.style.left="-200px"; 
-
-			}
-
 		
 		</script>
 		<style type="text/css">
+			html, body{
+				height: 100%; 
+			}
 			div#topbar{
 				background:-webkit-linear-gradient(#666, #000);
 				background:linear-gradient(#666, #000);
@@ -104,7 +98,6 @@
 			table{
 
 				margin: 10px;
-				overflow: scroll;
 
 			}
 			table, td{
@@ -121,9 +114,10 @@
 				padding: 5px; 
 			}
 			iframe{
-				float: left
+				float: right;
+				display: inline-block;
+				
 			}
-
 		
 			
 			
@@ -147,42 +141,31 @@
 		</div>
 	</div>
 
+	<div>
+		<div style="height:700px; overflow:scroll; width:650px; float: left">
+			<table>
+				{{range .Tag}}
+					<tr>
+						<td style="width: 250px; height:70px;">
+							<p>{{.Path}}</p>
+						</td>
+						<td style="width: 250px; height: 70px; " >
+							<p>{{.Uuid}}</p>
+							</td>
+							<td>
+									
+							<button onclick="getDisplay('{{.Uuid}}')" style="height:70px;">Display</button>
+						</td>
+					</tr>
+					{{end}}		
+			</table>
+		</div>	
+		
+		<div style="margin-left:300px;">
+			<iframe name="displayFrame" id="myFrame" style="visibility:hidden;" scrolling="yes" onmouseout="hideDisplay('myFrame')"></iframe>
+		</div>		
+	</div>
 	
 	
-	
-	<!--<table>
-		<tr>
-			<td><p></p></td>
-			<td><p></p></td>
-			
-			<td>
-
-				<form action="/display/" method="GET" target=""> after display make sure to include uuid
-				<input style="height: 51px;" type="submit" value="Display" onclick="getDisplay('x')">
-
-				</form>
-			</td>
-		</tr>
-	</table>
-	
-	<iframe name="x" id="x" height="0px" width="0px" style="visibility:hidden;" onmouseout="hideDisplay('x')"></iframe>-->
-
-	<table>
-		{{range .Tag}}
-			<tr>
-				<td style="width: 250px; height:70px;">
-					<p>{{.Path}}</p>
-				</td>
-				<td style="width: 250px; height: 70px; " >
-					<p>{{.Uuid}}</p>
-				</td>
-				<td>
-					
-					<button onclick="getDisplay('{{.Uuid}}')" style="height:70px;">Display</button>
-				</td>
-			</tr>
-		{{end}}
-	</table>
-	<iframe name="displayFrame" id="myFrame" style="visibility:hidden;" scrolling="no" onscroll="scrollFrame('myFrame')"></iframe>
 
 </html>
