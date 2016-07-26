@@ -59,14 +59,14 @@
 			div#topbar{
 				background:-webkit-linear-gradient(#666, #000);
 				background:linear-gradient(#666, #000);
-				height:80px;
+				height:100px;
 			}
 			div#topbar > #logo{
 				float:left;
-				width:140px;
-				height:35px;
-				margin:0px 0px 0px 0px;
-				font-size: 36px;
+				width:200px;
+				height:40px;
+				margin:20px 0px 0px 20px;
+				font-size: 28px;
 				color:#999;
 			}
 			div#topbar > #sections_btn_holder{
@@ -75,14 +75,14 @@
 				height:46px;
 				padding-top:16px;
 			}
-			div#topbar > #sections_btn_holder > button{ background:#F90;}
+			div#topbar > #sections_btn_holder > button{}
 			div#topbar > #sections_panel{
 				position:absolute;
 				height:0px;
-				width:550px;
+				width:150px;
 				background:#000;
-				top:60px;
-				left:160px;
+				top:55px;
+				left:1190px;
 				border-radius:0px 0px 8px 8px;
 				overflow:hidden;
 				z-index:10000;
@@ -98,25 +98,37 @@
 			table{
 
 				margin: 10px;
+				font-family: arial, sans-serif; 
 
 			}
 			table, td{
 
+			
+
 				border-spacing: 5px; 
-				background:  #12a3a7; 
-				
-				border-color: #12a3a7; border-collapse: collapse;
-				border: 1px solid black;
 				 
+				border: 1px solid blac
+				border-color: #12a3a7; border-collapse: collapse;
+								 
 				float: left; 
 			}
+			tr:nth-child(even){
+				background-color: #c4ebec;
+
+			}
 			td{
-				padding: 5px; 
+				padding: 5px;  
+			}
+			p{
+				font-family: arial, sans-serif; 
 			}
 			iframe{
 				float: right;
 				display: inline-block;
 				
+			}
+			th{
+				text-align: left;
 			}
 		
 			
@@ -144,6 +156,11 @@
 	<div>
 		<div style="height:700px; overflow:scroll; width:650px; float: left">
 			<table>
+				<tr style="border: 1px solid black;">
+					<td style="width: 250px">Path</td>
+					<td>uuid</td>
+				</tr>
+				<tbody>
 				{{range .Tag}}
 					<tr>
 						<td style="width: 250px; height:70px;">
@@ -151,13 +168,14 @@
 						</td>
 						<td style="width: 250px; height: 70px; " >
 							<p>{{.Uuid}}</p>
-							</td>
-							<td>
+						</td>
+						<td>
 									
 							<button onclick="getDisplay('{{.Uuid}}')" style="height:70px;">Display</button>
 						</td>
 					</tr>
-					{{end}}		
+					{{end}}	
+				</tbody>	
 			</table>
 		</div>	
 		
