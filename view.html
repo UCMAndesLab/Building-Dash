@@ -1,67 +1,190 @@
+<!DOCTYPE html>
 <html>
-	<head>
-		<title>results</title>
-			<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
-			<script type="text/javascript">
+<head>
+	<title>testView</title>
+		<script src="http://canvasjs.com/assets/script/canvasjs.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
-			window.onload = function () {
-		
-				var readData = {{.ReadData}};
-			  
-				var title = {{.Title}}
+		<script type="text/javascript">
+			function toggleNavPanel(x){
+				var panel = document.getElementById(x), navarrow = document.getElementById("navarrow"), maxH = "300px"; 
 
-				for(i = 0; i < readData.length; i++){
-					var series1 = {
-						type: "spline",
-						name: "Values",
-						showInLegend: true,
-						markerType: "none"
-					};
-					
-					var uuid = readData[i].uuid
-					var chart = new CanvasJS.Chart(uuid);
-					//alert(readData[i].Readings);
-					chart.options.animationEnabled = true; 
-					chart.options.title = {text: title}; 
-					chart.options.axisX = {
-						valueFormatString: "hh-TT-K",
-						title: "time",
-						intervalType: "minute",
-						interval: 1
-					}; 
-					chart.options.axisY = {valueFormatString: "##.##0"};
-					chart.options.data = []; 
-					chart.options.data.push(series1); 
+				if(panel.style.height == maxH){
+					panel.style.height = "0px"; 
+					navarrow.innerHTML = "&#9662;"; 
+				}else{
+					panel.style.height = maxH; 
+					navarrow.innerHTML = " &#9652;"; 
 
-					testData = readData[i].Readings; 
-					var dp = []; 
-					series1.dataPoints = []; 
-					for(j = 0; j < testData.length; j++){
-						//alert(testData[i].Value)
-						//alert(testData[j].Value);
-						dp.push({x: new Date(testData[j].Time), y: testData[j].Value}); 
-					}
-					
-					series1.dataPoints = series1.dataPoints.concat(dp);
-
-					chart.render(); 
+				}
+			}
+			function getDisplay(uuid){
+				var iframe = document.getElementById("myFrame"), maxH = "300px";
 				
+				 
+				var path = "/display/" + uuid; 
+				
+				iframe.src = path;
+
+
+
+				iframe.style.display="inline-block";  
+				if(iframe.style.height == maxH){
+					iframe.style.visibility="hidden";
+					iframe.style.width="0px"
+					iframe.style.height="0px"; 
+				}else{
+					iframe.style.visibility="visible"; 
+					iframe.style.height = "700px"; 
+					iframe.style.width = "680px"; 
 				}
 				
-			
 				
 			}
-			</script>
-	</head>
-	<body>
-		<h1>{{.Title}}</h1>
-		<p>[<a href="/query/">Search</a>]</p>
+			function hideDisplay(id){
+				var iframe = document.getElementById(id);
 
-		{{range .ReadData}}
-			<div id={{.Uuid}} style="height: 300px; width: 100%"></div>
-		{{end}}
+				iframe.style.visibility="hidden";  
+				iframe.style.height = "0px";
+				iframe.style.width = "0px"; 
 
+			}
 
-	</body>
+		
+		</script>
+		<style type="text/css">
+			html, body{
+				height: 100%; 
+			}
+			div#topbar{
+				background:-webkit-linear-gradient(#666, #000);
+				background:linear-gradient(#666, #000);
+				height:100px;
+			}
+			div#topbar > #logo{
+				float:left;
+				width:200px;
+				height:40px;
+				margin:20px 0px 0px 20px;
+				font-size: 28px;
+				font-family: arial, sans-serif; 
+				color:#999;
+			}
+			div#topbar > #sections_btn_holder{
+				float:right;
+				width:144px;
+				height:46px;
+				padding-top:16px;
+			}
+			div#topbar > #sections_btn_holder > button{}
+			div#topbar > #sections_panel{
+				position:absolute;
+				height:0px;
+				width:150px;
+				background:#000;
+				top:55px;
+				left:1190px;
+				border-radius:0px 0px 8px 8px;
+				overflow:hidden;
+				z-index:10000;
+				transition: height 0.3s linear 0s;
+			}
+			div#topbar > #sections_panel > div{
+				background:#333;
+				padding:20px;
+				height:238px;
+				margin:10px;
+				color:#FC0;
+			}
+			table{
+
+				margin: 10px;
+				font-family: arial, sans-serif; 
+
+			}
+			table, td{
+
+			
+
+				border-spacing: 5px; 
+				 
+				border: 1px solid blac
+				border-color: #12a3a7; border-collapse: collapse;
+								 
+				float: left; 
+			}
+			tr:nth-child(even){
+				background-color: #c4ebec;
+
+			}
+			td{
+				padding: 5px;  
+			}
+			p{
+				font-family: arial, sans-serif; 
+			}
+			iframe{
+				float: right;
+				display: inline-block;
+				
+			}
+			th{
+				text-align: left;
+			}
+		
+			
+			
+		</style>
+</head>
+<body>
+	
+
+	<div id="topbar">
+		<div id="logo">Building Dash</div>
+		<div id="sections_btn_holder">
+	 		<button onclick="toggleNavPanel('sections_panel')">Navigator <span id="navarrow">&#9662;</span></button>
+		</div>
+		<div id="sections_panel">
+			<div>
+	      		<form action="/query/" method="GET">
+	      			<input type="submit" value="Search">
+	      			
+	      		</form>
+	    	</div>
+		</div>
+	</div>
+
+	<div>
+		<div style="height:700px; overflow:scroll; width:650px; float: left">
+			<table>
+				<tr style="border: 1px solid black;">
+					<td style="width: 250px">Path</td>
+					<td>uuid</td>
+				</tr>
+				<tbody>
+				{{range .TagSlices}}
+					<tr>
+						<td style="width: 250px; height:70px;">
+							<p>{{.Path}}</p>
+						</td>
+						<td style="width: 250px; height: 70px; " >
+							<p>{{.Uuid}}</p>
+						</td>
+						<td>
+									
+							<button onclick="getDisplay('{{.Uuid}}')" style="height:70px;">Display</button>
+						</td>
+					</tr>
+					{{end}}	
+				</tbody>	
+			</table>
+		</div>	
+		
+		<div style="margin-left:300px;">
+			<iframe name="displayFrame" id="myFrame" style="visibility:hidden;" scrolling="yes" onmouseout="hideDisplay('myFrame')"></iframe>
+		</div>		
+	</div>
+	
+	
+
 </html>
-

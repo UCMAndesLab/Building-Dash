@@ -15,17 +15,27 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 )
 
-var responseTemplate = template.Must(template.ParseFiles("view.html", "query.html"))
+var responseTemplate = template.Must(template.ParseFiles("view.html", "query.html", "display.html"))
 var apikey string = "rU3eqtaE4zBSzZKjoUS9Q7fVPbTmKmD2eOUr"
 
-var validPath = regexp.MustCompile("^/(query|save|view)/([a-zA-Z0-9]+)$")
+var validPath = regexp.MustCompile("^/(query|save|view|dispaly)/([a-zA-Z0-9]+)$")
 
 type Page struct {
-	Title    string
-	ReadData []gosMAP.Data
+	Path     string                 `json: "Path"`
+	UUid     string                 `json: "UUid"`
+	Info     map[string]interface{} `json: "Info"`
+	ReadData gosMAP.Data
 }
 
-func createPage(title string, c *gin.Context) (*Page, error) {
+type Tags struct {
+	Path string `json: "Path"`
+	Uuid string `json: "Uuid"`
+}
+type Information struct {
+	TagSlices []Tags `json: "Tag"`
+}
+
+func createPage(title string, c *gin.Context) (*Information, error) {
 
 	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
 	conn.ConnectMemcache("localhost:11211")
@@ -44,43 +54,77 @@ func createPage(title string, c *gin.Context) (*Page, error) {
 		return nil, err
 	}
 
-	var query []string
+	var uuid []string
 
-	err = json.Unmarshal(item.Value, &query)
+	err = json.Unmarshal(item.Value, &uuid)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var data []gosMAP.Data
-	for i := range query {
-		d, err := conn.Get(query[i], 0, 0, 10)
+	var tags []Tags
+
+	for i := range uuid {
+		t, err := conn.Tag(uuid[i])
 
 		if err != nil {
 			return nil, err
 		}
 
-		if len(d) != 0 {
-			if len(d[0].Readings) != 0 {
-				data = append(data, d[0])
-			}
+		tag := Tags{
+			Path: t.Path,
+			Uuid: t.Uuid,
 		}
+
+		tags = append(tags, tag)
 	}
-	return &Page{Title: title, ReadData: data}, nil
+
+	return &Information{TagSlices: tags}, nil
+}
+
+func displayHandler(c *gin.Context) {
+	uuid := c.Request.URL.Path[len("/display/"):]
+
+	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	data, err := conn.Get(uuid, 0, 0, 10)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	tag, err := conn.Tag(uuid)
+
+	if err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+	}
+
+	p := &Page{
+		Path:     tag.Path,
+		UUid:     uuid,
+		Info:     tag.Metadata,
+		ReadData: data[0],
+	}
+
+	renderTemplate(c, "display", p)
 }
 
 func viewHandler(c *gin.Context) {
 
 	title := c.Request.URL.Path[len("/view/"):]
 
-	p, err := createPage(title, c)
+	tags, err := createPage(title, c)
 
 	if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	renderTemplate(c, "view", p)
+	renderTemplate(c, "view", tags)
 }
 func queryHandler(c *gin.Context) {
 
@@ -104,7 +148,12 @@ func saveHandler(c *gin.Context) {
 
 	if err != nil {
 
-		q, _ := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", building))
+		q, err := conn.QueryList(fmt.Sprintf("select distinct uuid where Metadata/Location/Building = '%s'", building))
+
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
 
 		b, err := json.Marshal(q)
 
@@ -113,7 +162,10 @@ func saveHandler(c *gin.Context) {
 			return
 		}
 
-		item := memcache.Item{Key: key, Value: b, Expiration: 6}
+		item := memcache.Item{
+			Key:   key,
+			Value: b,
+		}
 
 		err = conn.Mc.Add(&item)
 
@@ -129,7 +181,7 @@ func saveHandler(c *gin.Context) {
 	}
 }
 
-func renderTemplate(c *gin.Context, tmpl string, p *Page) {
+func renderTemplate(c *gin.Context, tmpl string, p interface{}) {
 	err := responseTemplate.ExecuteTemplate(c.Writer, tmpl+".html", p)
 
 	if err != nil {
@@ -158,6 +210,7 @@ func main() {
 	router.GET("/view/:query", viewHandler)
 	router.GET("/query/", queryHandler) //ok, for a new page with no title yet, don't include :adding in the url
 	router.POST("/save/", saveHandler)
-	router.Run(":3000")
+	router.GET("/display/:path", displayHandler)
+	router.Run(":8000")
 
 }
