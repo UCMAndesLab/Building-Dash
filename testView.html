@@ -6,92 +6,6 @@
 		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
 
 		<script type="text/javascript">
-			function displayChart(){
-				var readData = {{.ReadData}}; 
-
-
-				var path = {{.Path}};
-
-				var title = path; 
-
-				var uuid = readData.uuid; 
-
-				var series1 = {
-					type: "spline",
-					name: "Values",
-					showInLegend: true,
-					markerType: "none"
-				}; 
-
-				var chart = new CanvasJS.Chart("chart"); 
-
-				chart.options.animationEnabled = true; 
-				chart.options.title = {text: title}; 
-
-				chart.options.axisX = {
-					valueFormatString: "hh-TT-K",
-					title: "time",
-					intervalType: "minute",
-					interval: 1
-				}; 
-
-				chart.options.axisY = {valueFormatString: "##.##0"}; 
-				chart.options.data = []; 
-				chart.options.data.push(series1); 
-
-				testData = readData.Readings; 
-
-				var dp = []; 
-
-				series1.dataPoints = []; 
-
-				for(i = 0; i < testData.length; ++i){
-					dp.push({x: new Date(testData[i].Time), y: testData[i].Value});
-				}
-
-				series1.dataPoints = series1.dataPoints.concat(dp); 
-
-				chart.render(); 
-
-				var series2 = {
-					type: "spline",
-					name: "Values",
-					showInLegend: true,
-					markerType: "none"
-				}; 
-
-				var chart2 = new CanvasJS.Chart("chart2"); 
-
-				chart2.options.animationEnabled = true; 
-
-				chart2.options.title = {text: title}; 
-				chart2.options.axisX = {
-					valueFormatString: "hh-TT-K",
-					title: "time",
-					intervalType: "minute",
-					interval: 1
-				}; 
-
-				chart2.options.data =[]; 
-
-				chart2.options.data.push(series2); 
-
-				var dp2 =[]; 
-
-				series2.dataPoints = []; 
-
-				for(j = 0; j < testData.length; ++j){
-					dp2.push({x: new Date(testData[j].Time), y: testData[j].Value + 100.0}); 
-				}
-
-				series2.dataPoints = series2.dataPoints.concat(dp2); 
-
-				chart2.render();
-
-
-
-			}
-			window.onclick = displayChart; 
 			function toggleNavPanel(x){
 				var panel = document.getElementById(x), navarrow = document.getElementById("navarrow"), maxH = "300px"; 
 
@@ -104,14 +18,15 @@
 
 				}
 			}
-			function postYourAdd(x){
-				var iframe = document.getElementById(x), maxH = "300px";
-				var uuid = {{.UUid}};
-				var path = uuid; 
+			function getDisplay(uuid){
+				var iframe = document.getElementById("myFrame"), maxH = "300px";
+				
 				 
-				path = "/display/" + uuid; 
+				var path = "/display/" + uuid; 
 				
 				iframe.src = path;
+
+
 
 				iframe.style.display="inline-block";  
 				if(iframe.style.height == maxH){
@@ -120,20 +35,29 @@
 					iframe.style.height="0px"; 
 				}else{
 					iframe.style.visibility="visible"; 
-					iframe.style.height = "300px"; 
-					iframe.style.width = "100%"; 
+					iframe.style.height = "700px"; 
+					iframe.style.width = "700px"; 
 				}
 				
 				
 			}
-		function hideDisplay(x){
-			var iframe = document.getElementById(x);
+			function hideDisplay(id){
+				var iframe = document.getElementById(id);
 
-			iframe.style.visibility="hidden";  
-			iframe.style.height = "0px";
-			iframe.style.width = "0px"; 
+				iframe.style.visibility="hidden";  
+				iframe.style.height = "0px";
+				iframe.style.width = "0px"; 
 
-		}
+			}
+
+			function scrollFrame(id){
+				var iframe = document.getElementById(id); 
+
+				iframe.style.position ="absolute"; 
+				iframe.style.top="100px"; 
+				iframe.style.left="-200px"; 
+
+			}
 
 		
 		</script>
@@ -180,6 +104,7 @@
 			table{
 
 				margin: 10px;
+				overflow: scroll;
 
 			}
 			table, td{
@@ -195,6 +120,10 @@
 			td{
 				padding: 5px; 
 			}
+			iframe{
+				float: left
+			}
+
 		
 			
 			
@@ -221,22 +150,39 @@
 	
 	
 	
-	<table>
+	<!--<table>
 		<tr>
-			<td><p>{{.Path}}</p></td>
-			<td><p>{{.UUid}}</p></td>
+			<td><p></p></td>
+			<td><p></p></td>
 			
 			<td>
 
-				<form action="/display/{{.UUid}}" method="GET" target="{{.UUid}}">
-				<input style="height: 51px;" type="submit" value="Display" onclick="postYourAdd('{{.UUid}}')">
+				<form action="/display/" method="GET" target=""> after display make sure to include uuid
+				<input style="height: 51px;" type="submit" value="Display" onclick="getDisplay('x')">
 
 				</form>
 			</td>
 		</tr>
 	</table>
 	
-	<iframe name="{{.UUid}}" id="{{.UUid}}" height="0px" width="0px" style="visibility:hidden;" onmouseout="hideDisplay('{{.UUid}}')"></iframe>
+	<iframe name="x" id="x" height="0px" width="0px" style="visibility:hidden;" onmouseout="hideDisplay('x')"></iframe>-->
 
+	<table>
+		{{range .Tag}}
+			<tr>
+				<td style="width: 250px; height:70px;">
+					<p>{{.Path}}</p>
+				</td>
+				<td style="width: 250px; height: 70px; " >
+					<p>{{.Uuid}}</p>
+				</td>
+				<td>
+					
+					<button onclick="getDisplay('{{.Uuid}}')" style="height:70px;">Display</button>
+				</td>
+			</tr>
+		{{end}}
+	</table>
+	<iframe name="displayFrame" id="myFrame" style="visibility:hidden;" scrolling="no" onscroll="scrollFrame('myFrame')"></iframe>
 
 </html>

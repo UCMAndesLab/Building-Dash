@@ -1,6 +1,7 @@
 package main
 
 import (
+	//"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -25,6 +26,15 @@ type Page struct {
 	ReadData gosMAP.Data
 }
 
+type Tags struct {
+	Path string `json: "Path"`
+	Uuid string `json: "Uuid"`
+}
+
+type Information struct {
+	Tag []Tags `json: "Tag"`
+}
+
 var apikey string = "rU3eqtaE4zBSzZKjoUS9Q7fVPbTmKmD2eOUr"
 
 func viewHandler(c *gin.Context) {
@@ -35,8 +45,6 @@ func viewHandler(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-
-	t, _ := template.ParseFiles("testView.html")
 
 	conn.ConnectMemcache("localhost:11211")
 
@@ -60,16 +68,27 @@ func viewHandler(c *gin.Context) {
 		return
 	}
 
-	tag, err := conn.Tag(uuid[0])
+	var tags []Tags
 
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
+	for i := range uuid {
+		t, err := conn.Tag(uuid[i])
+
+		if err != nil {
+			c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+
+		tag := Tags{
+			Path: t.Path,
+			Uuid: t.Uuid,
+		}
+
+		tags = append(tags, tag)
 	}
 
-	data, err := conn.Get(uuid[0], 0, 0, 10)
+	//data, err := conn.Get(uuid[0], 0, 0, 10)
 
-	if err != nil {
+	/*if err != nil {
 		c.AbortWithError(http.StatusInternalServerError, err)
 	}
 
@@ -78,8 +97,23 @@ func viewHandler(c *gin.Context) {
 		UUid:     uuid[0],
 		Info:     tag.Metadata,
 		ReadData: data[0],
+	}*/
+
+	info := &Information{
+		Tag: tags,
 	}
-	t.Execute(c.Writer, p)
+	t, err := template.ParseFiles("testView.html")
+
+	if err != nil {
+
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
+
+	if err = t.Execute(c.Writer, info); err != nil {
+		c.AbortWithError(http.StatusInternalServerError, err)
+		return
+	}
 }
 
 func queryHandler(c *gin.Context) {
@@ -101,8 +135,6 @@ func saveHandler(c *gin.Context) {
 	building := c.Request.FormValue("query")
 
 	key := strings.Replace(building, " ", "\\", -1)
-
-	//fmt.Println(key)
 
 	_, err = conn.Mc.Get(key)
 
@@ -141,38 +173,9 @@ func saveHandler(c *gin.Context) {
 
 }
 
-func hoverHandler(c *gin.Context) {
-
-	path := c.Request.URL.Path[len("/display/"):]
-
-	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
-
-	if err != nil {
-		c.AbortWithError(http.StatusInternalServerError, err)
-		return
-	}
-
-	conn.ConnectMemcache("localhost:11211")
-
-	item, err := conn.Mc.Get(path)
-
-	if err != nil {
-		c.AbortWithError(http.StatusNotFound, err)
-		return
-	}
-
-	var p Page
-
-	err = json.Unmarshal(item.Value, &p)
-
-	t, _ := template.ParseFiles("display.html")
-
-	t.Execute(c.Writer, p)
-
-}
-
 func displayHandler(c *gin.Context) {
 	uuid := c.Request.URL.Path[len("/display/"):]
+
 	conn, err := gosMAP.Connect("http://mercury:8079", apikey)
 
 	if err != nil {
